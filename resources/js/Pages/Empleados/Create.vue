@@ -1,0 +1,159 @@
+<template>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+      <h1 class="text-2xl text-center font-semibold text-gray-800 mb-6">Formulario de Nuevo Empleado</h1>
+      <form @submit.prevent="guardarEmpleado" class="space-y-6">
+        <!-- Nombre -->
+        <div class="flex flex-col">
+          <label for="nombre" class="text-sm font-medium text-gray-700">Nombre</label>
+          <input
+            type="text"
+            id="nombre"
+            v-model="empleado.nombre"
+            @blur="validateNombre"
+            :class="{'border-red-500': !isNombreValido, 'border-gray-300': isNombreValido}"
+            class="mt-2 p-3 border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ingrese el nombre del empleado"
+            required
+          />
+          <p v-if="!isNombreValido" class="text-red-500 text-sm">El nombre es requerido.</p>
+        </div>
+
+        <!-- Primer Apellido -->
+        <div class="flex flex-col mb-4">
+          <label for="primer_apellido" class="text-sm font-medium text-gray-700">Primer Apellido</label>
+          <input
+            type="text"
+            id="primer_apellido"
+            v-model="empleado.primer_apellido"
+            @blur="validatePrimerApellido"
+            :class="{'border-red-500': !isPrimerApellidoValido, 'border-gray-300': isPrimerApellidoValido}"
+            class="mt-2 p-3 border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ingrese el primer apellido del empleado"
+            required
+          />
+          <p v-if="!isPrimerApellidoValido" class="text-red-500 text-sm">El primer apellido es requerido.</p>
+        </div>
+
+        <!-- Segundo Apellido -->
+        <div class="flex flex-col mb-4">
+          <label for="segundo_apellido" class="text-sm font-medium text-gray-700">Segundo Apellido</label>
+          <input
+            type="text"
+            id="segundo_apellido"
+            v-model="empleado.segundo_apellido"
+            @blur="validateSegundoApellido"
+            :class="{'border-red-500': !isSegundoApellidoValido, 'border-gray-300': isSegundoApellidoValido}"
+            class="mt-2 p-3 border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ingrese el segundo apellido del empleado"
+            required
+          />
+          <p v-if="!isSegundoApellidoValido" class="text-red-500 text-sm">El segundo apellido es requerido.</p>
+        </div>
+
+        <!-- Email -->
+        <div class="flex flex-col">
+          <label for="email" class="text-sm font-medium text-gray-700">Email</label>
+          <input
+            type="email"
+            id="email"
+            v-model="empleado.email"
+            @blur="validateEmailExistence"
+            :class="{
+              'border-red-500': !isEmailValido || emailDuplicado,
+              'border-gray-300': isEmailValido && !emailDuplicado
+            }"
+            class="mt-2 p-3 border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ingrese el correo electrónico"
+            required
+          />
+          <p v-if="!isEmailValido" class="text-red-500 text-sm">Por favor ingrese un correo electrónico válido.</p>
+          <p v-if="emailDuplicado" class="text-red-500 text-sm">Este correo ya está registrado.</p>
+        </div>
+
+        <!-- Cargo -->
+        <div class="flex flex-col">
+          <label for="cargo" class="text-sm font-medium text-gray-700">Cargo</label>
+          <select
+            id="cargo"
+            v-model="empleado.idcargo"
+            @blur="validateCargo"
+            :class="{'border-red-500': !isCargoValido, 'border-gray-300': isCargoValido}"
+            class="mt-2 p-3 border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="" disabled selected>Seleccione un cargo</option> <!-- Opción predeterminada -->
+            <option v-for="cargo in cargos" :key="cargo.idcargo" :value="cargo.idcargo">
+              {{ cargo.nombre_cargo }}
+            </option>
+          </select>
+          <p v-if="!isCargoValido" class="text-red-500 text-sm">Seleccione un cargo.</p>
+        </div>
+
+        <!-- Nivel -->
+        <div class="flex flex-col">
+          <label for="nivel" class="text-sm font-medium text-gray-700">Nivel</label>
+          <select
+            id="nivel"
+            v-model="empleado.idnivel"
+            @blur="validateNivel"
+            :class="{'border-red-500': !isNivelValido, 'border-gray-300': isNivelValido}"
+            class="mt-2 p-3 border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="" disabled selected>Seleccione un nivel</option>
+            <option v-for="nivel in niveles" :key="nivel.idnivel" :value="nivel.idnivel">
+              {{ nivel.salario }}
+            </option>
+          </select>
+          <p v-if="!isNivelValido" class="text-red-500 text-sm">Seleccione un nivel.</p>
+        </div>
+
+        <!-- Fecha de Contratación -->
+        <div class="flex flex-col">
+          <label for="fecha_contratacion" class="text-sm font-medium text-gray-700">Fecha de Contratación</label>
+          <input
+            type="date"
+            id="fecha_contratacion"
+            v-model="empleado.fecha_contratacion"
+            @blur="validateFechaContratacion"
+            :class="{'border-red-500': !isFechaContratacionValida, 'border-gray-300': isFechaContratacionValida}"
+            class="mt-2 p-3 border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <p v-if="!isFechaContratacionValida" class="text-red-500 text-sm">La fecha de contratación es requerida.</p>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="flex space-x-4">
+          <button
+            type="submit"
+            :disabled="!formIsValid || emailDuplicado"
+            class="w-full py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-300"
+          >
+            Guardar Empleado
+          </button>
+
+          <button
+            type="button"
+            @click="confirmCancel"
+            :disabled="!formHasData"
+            class="w-full py-3 bg-gray-600 text-white font-semibold rounded-md hover:bg-gray-700 transition duration-300"
+          >
+            Cancelar
+          </button>
+
+          <!-- Botón Regresar -->
+          <button
+            type="button"
+            @click="regresar"
+            class="w-full py-3 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition duration-300"
+          >
+            Regreso
+          </button>
+        </div>
+      </form>
+    </div>
+</template>
+
+<script src="./Create.js/"></script>
